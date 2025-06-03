@@ -21,6 +21,8 @@ const emailSchema = new mongoose.Schema({
   token: { type: String, required: true }
 });
 
+const Email = mongoose.model('Email', emailSchema); // ✅ À ajouter
+
 app.post('/subscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email manquant' });
