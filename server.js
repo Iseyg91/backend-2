@@ -77,26 +77,26 @@ app.post('/subscribe', async (req, res) => {
   }
 });
 
-// ✅ Confirmation d'inscription
+// ✅ Confirmation d'inscription (sans redirection HTML)
 app.get('/confirm/:token', async (req, res) => {
   const { token } = req.params;
 
   try {
     const emailEntry = await Email.findOne({ token });
-    if (!emailEntry) return res.status(400).send('Lien invalide ou expiré.');
+    if (!emailEntry) return res.status(400).send('❌ Lien invalide ou expiré.');
 
     if (emailEntry.verified) {
-      return res.redirect('/deja-confirmé.html');
+      return res.status(200).send('✅ Cet e-mail est déjà confirmé.');
     }
 
     emailEntry.verified = true;
     emailEntry.token = '';
     await emailEntry.save();
 
-    return res.redirect('/email-confirmation.html');
+    return res.status(200).send('✅ Ton e-mail a bien été confirmé. Merci !');
   } catch (err) {
     console.error('Erreur de confirmation :', err);
-    res.status(500).send('Erreur serveur.');
+    res.status(500).send('❌ Erreur serveur pendant la confirmation.');
   }
 });
 
