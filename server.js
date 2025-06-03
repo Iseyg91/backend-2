@@ -98,6 +98,23 @@ app.get('/test-mail', async (req, res) => {
   }
 });
 
+// Route DELETE pour se désinscrire
+app.delete('/unsubscribe', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email manquant' });
+
+  try {
+    const result = await Email.deleteOne({ address: email });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Adresse e-mail non trouvée' });
+    }
+    res.status(200).json({ message: '✅ Désinscription réussie' });
+  } catch (err) {
+    console.error('❌ Erreur lors de la désinscription :', err);
+    res.status(500).json({ error: '❌ Erreur serveur pendant la désinscription' });
+  }
+});
+
 // Démarrer le serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
