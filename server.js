@@ -74,6 +74,14 @@ app.post('/send-newsletter', async (req, res) => {
   }
 });
 
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ Transporteur non prêt :", error);
+  } else {
+    console.log("✅ Transporteur prêt !");
+  }
+});
+
 // Démarrer le serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
