@@ -34,7 +34,7 @@ app.post('/subscribe', async (req, res) => {
     await newEmail.save();
 
     // Lien de confirmation
-    const confirmLink = `${process.env.BACK_URL}/confirm/${token}`;
+    const confirmLink = `${process.env.BACK_URL}confirm/${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -141,14 +141,14 @@ app.get('/confirm/:token', async (req, res) => {
     if (!emailEntry) return res.status(400).send('Lien invalide ou expiré.');
 
     if (emailEntry.confirmed) {
-      return res.redirect(`${process.env.FRONT_URL}/deja-confirmé.html`);
+      return res.redirect(`${process.env.FRONT_URL}deja-confirmé.html`);
     }
 
     emailEntry.confirmed = true;
     emailEntry.token = ''; // Invalider le token après usage
     await emailEntry.save();
 
-    res.redirect(`${process.env.FRONT_URL}/email-confirmation.html`);
+    res.redirect(`${process.env.FRONT_URL}email-confirmation.html`);
   } catch (err) {
     console.error('Erreur de confirmation :', err);
     res.status(500).send('Erreur serveur.');
