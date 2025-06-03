@@ -3,14 +3,15 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const path = require('path'); // ✅ Ajouté ici
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Indique que les fichiers HTML sont dans le dossier "pages"
-app.use(express.static('pages'));
+// ✅ Sert les fichiers HTML statiques depuis le dossier "pages"
+app.use(express.static(path.join(__dirname, 'pages')));
 
 // Connexion à MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -26,6 +27,24 @@ const emailSchema = new mongoose.Schema({
 
 const Email = mongoose.model('Email', emailSchema);
 
+// ✅ Transporteur mail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ Transporteur non prêt :", error);
+  } else {
+    console.log("✅ Transporteur prêt !");
+  }
+});
+
+// ✅ Inscription
 app.post('/subscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email manquant' });
@@ -57,15 +76,7 @@ app.post('/subscribe', async (req, res) => {
   }
 });
 
-// Configurer le transport d’e-mail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
+// ✅ Envoi d'une newsletter
 app.post('/send-newsletter', async (req, res) => {
   const { subject, content } = req.body;
 
@@ -95,14 +106,7 @@ app.post('/send-newsletter', async (req, res) => {
   }
 });
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ Transporteur non prêt :", error);
-  } else {
-    console.log("✅ Transporteur prêt !");
-  }
-});
-
+// ✅ Test email
 app.get('/test-mail', async (req, res) => {
   try {
     await transporter.sendMail({
@@ -118,7 +122,7 @@ app.get('/test-mail', async (req, res) => {
   }
 });
 
-// Route DELETE pour se désinscrire
+// ✅ Désinscription
 app.delete('/unsubscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email manquant' });
@@ -135,7 +139,7 @@ app.delete('/unsubscribe', async (req, res) => {
   }
 });
 
-// ✅ Confirmation d'inscription
+// ✅ Confirmation par token
 app.get('/confirm/:token', async (req, res) => {
   const { token } = req.params;
 
@@ -144,21 +148,21 @@ app.get('/confirm/:token', async (req, res) => {
     if (!emailEntry) return res.status(400).send('Lien invalide ou expiré.');
 
     if (emailEntry.verified) {
-      return res.redirect('/deja-confirmé.html');
+      return res.redirect('/deja-confirmé.html'); // ✅ à mettre aussi dans /pages
     }
 
     emailEntry.verified = true;
     emailEntry.token = '';
     await emailEntry.save();
 
-    return res.redirect('/email-confirmation.html');
+    return res.redirect('/email-confirmation.html'); // ✅ doit exister dans /pages
   } catch (err) {
     console.error('Erreur de confirmation :', err);
     res.status(500).send('Erreur serveur.');
   }
 });
 
-// Démarrer le serveur
+// ✅ Lancement serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur http://localhost:${PORT}`);
