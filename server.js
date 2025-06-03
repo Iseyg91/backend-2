@@ -141,7 +141,7 @@ app.get('/confirm/:token', async (req, res) => {
     if (!emailEntry) return res.status(400).send('Lien invalide ou expiré.');
 
     if (emailEntry.confirmed) {
-      return res.redirect(${process.env.FRONT_URL}/deja-confirmé.html);
+      return res.redirect(`${process.env.FRONT_URL}/deja-confirmé.html`);
     }
 
     emailEntry.confirmed = true;
