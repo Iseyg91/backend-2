@@ -54,8 +54,8 @@ app.post('/send-newsletter', async (req, res) => {
   }
 
   try {
-    const allEmails = await Email.find(); // 👈 doit être AVANT l'utilisation
-    console.log("Adresses ciblées :", allEmails.map(e => e.address));
+    const allEmails = await Email.find();
+    console.log("Adresses ciblées :", allEmails.map(e => e.address)); // ✅ ICI
 
     const sendPromises = allEmails.map(entry => {
       return transporter.sendMail({
