@@ -3,15 +3,14 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const path = require('path'); // ✅ Ajouté ici
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Sert les fichiers HTML statiques depuis le dossier "pages"
-app.use(express.static(path.join(__dirname, 'pages')));
+// ✅ Indique que les fichiers HTML sont dans le dossier "pages"
+app.use(express.static('pages'));
 
 // Connexion à MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -27,24 +26,6 @@ const emailSchema = new mongoose.Schema({
 
 const Email = mongoose.model('Email', emailSchema);
 
-// ✅ Transporteur mail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ Transporteur non prêt :", error);
-  } else {
-    console.log("✅ Transporteur prêt !");
-  }
-});
-
-// ✅ Inscription
 app.post('/subscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email manquant' });
@@ -55,14 +36,14 @@ app.post('/subscribe', async (req, res) => {
     const newEmail = new Email({ address: email, token });
     await newEmail.save();
 
-    const confirmLink = `https://pdd-xrdi.onrender.com/confirm/${token}`;
+    const confirmLink = https://pdd-xrdi.onrender.com/confirm/${token};
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Confirme ton inscription à Project : Delta",
-      html: `<p>Merci pour ton inscription ! Clique sur le bouton ci-dessous pour confirmer ton e-mail :</p>
-             <a href="${confirmLink}" style="background:#7c3aed;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;">Confirmer</a>`
+      html: <p>Merci pour ton inscription ! Clique sur le bouton ci-dessous pour confirmer ton e-mail :</p>
+             <a href="${confirmLink}" style="background:#7c3aed;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;">Confirmer</a>
     });
 
     res.status(200).json({ message: '📩 Email de confirmation envoyé' });
@@ -76,7 +57,15 @@ app.post('/subscribe', async (req, res) => {
   }
 });
 
-// ✅ Envoi d'une newsletter
+// Configurer le transport d’e-mail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
 app.post('/send-newsletter', async (req, res) => {
   const { subject, content } = req.body;
 
@@ -106,7 +95,14 @@ app.post('/send-newsletter', async (req, res) => {
   }
 });
 
-// ✅ Test email
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("❌ Transporteur non prêt :", error);
+  } else {
+    console.log("✅ Transporteur prêt !");
+  }
+});
+
 app.get('/test-mail', async (req, res) => {
   try {
     await transporter.sendMail({
@@ -122,7 +118,7 @@ app.get('/test-mail', async (req, res) => {
   }
 });
 
-// ✅ Désinscription
+// Route DELETE pour se désinscrire
 app.delete('/unsubscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email manquant' });
@@ -139,7 +135,7 @@ app.delete('/unsubscribe', async (req, res) => {
   }
 });
 
-// ✅ Confirmation par token
+// ✅ Confirmation d'inscription
 app.get('/confirm/:token', async (req, res) => {
   const { token } = req.params;
 
@@ -148,22 +144,22 @@ app.get('/confirm/:token', async (req, res) => {
     if (!emailEntry) return res.status(400).send('Lien invalide ou expiré.');
 
     if (emailEntry.verified) {
-      return res.redirect('/deja-confirmé.html'); // ✅ à mettre aussi dans /pages
+      return res.redirect('/deja-confirmé.html');
     }
 
     emailEntry.verified = true;
     emailEntry.token = '';
     await emailEntry.save();
 
-    return res.redirect('/email-confirmation.html'); // ✅ doit exister dans /pages
+    return res.redirect('/email-confirmation.html');
   } catch (err) {
     console.error('Erreur de confirmation :', err);
     res.status(500).send('Erreur serveur.');
   }
 });
 
-// ✅ Lancement serveur
+// Démarrer le serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Serveur en ligne sur http://localhost:${PORT}`);
+  console.log(🚀 Serveur en ligne sur http://localhost:${PORT});
 });
