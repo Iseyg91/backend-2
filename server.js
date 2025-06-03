@@ -141,14 +141,14 @@ app.get('/confirm/:token', async (req, res) => {
     if (!emailEntry) return res.status(400).send('Lien invalide ou expiré.');
 
     if (emailEntry.confirmed) {
-      return res.redirect(`${process.env.FRONT_URL}/deja-confirmé.html`);
+      return res.redirect("https://pdd-xrdi.onrender.com/deja-confirmé.html");
     }
 
     emailEntry.confirmed = true;
     emailEntry.token = ''; // Invalider le token après usage
     await emailEntry.save();
 
-    res.redirect(`${process.env.FRONT_URL}/email-confirmation.html`);
+    return res.redirect("https://pdd-xrdi.onrender.com/email-confirmation.html");
   } catch (err) {
     console.error('Erreur de confirmation :', err);
     res.status(500).send('Erreur serveur.');
