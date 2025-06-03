@@ -62,7 +62,7 @@ app.post('/send-newsletter', async (req, res) => {
         from: process.env.EMAIL_USER,
         to: entry.address,
         subject: subject,
-        text: content
+        html: content
       });
     });
 
@@ -103,4 +103,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur http://localhost:${PORT}`);
 });
-
