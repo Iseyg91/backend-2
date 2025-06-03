@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -36,8 +37,46 @@ app.post('/subscribe', async (req, res) => {
   }
 });
 
+// Configurer le transport d’e-mail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+app.post('/send-newsletter', async (req, res) => {
+  const { subject, content } = req.body;
+
+  if (!subject || !content) {
+    return res.status(400).json({ error: 'Sujet et contenu requis' });
+  }
+
+  try {
+    const allEmails = await Email.find();
+
+    const sendPromises = allEmails.map(entry => {
+      return transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: entry.address,
+        subject: subject,
+        text: content
+      });
+    });
+
+    await Promise.all(sendPromises);
+
+    res.status(200).json({ message: '📧 Newsletter envoyée à tous les abonnés' });
+  } catch (err) {
+    console.error('Erreur envoi mail :', err);
+    res.status(500).json({ error: 'Erreur serveur pendant l’envoi' });
+  }
+});
+
 // Démarrer le serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur http://localhost:${PORT}`);
 });
+
