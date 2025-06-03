@@ -148,7 +148,7 @@ app.get('/confirm/:token', async (req, res) => {
     emailEntry.token = ''; // Invalider le token après usage
     await emailEntry.save();
 
-    res.redirect(${process.env.FRONT_URL}/email-confirmation.html);
+    res.redirect(`${process.env.FRONT_URL}/email-confirmation.html`);
   } catch (err) {
     console.error('Erreur de confirmation :', err);
     res.status(500).send('Erreur serveur.');
