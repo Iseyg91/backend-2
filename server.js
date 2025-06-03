@@ -48,7 +48,7 @@ app.post('/subscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email manquant' });
 
-  const token = crypto.randomBytes(32).toString('hex');
+  const token = Math.floor(100000 + Math.random() * 900000).toString();
 
   try {
     const newEmail = new Email({ address: email, token });
@@ -56,15 +56,17 @@ app.post('/subscribe', async (req, res) => {
 
     const confirmLink = `https://pdd-xrdi.onrender.com/confirm/${token}`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Confirme ton inscription à Project : Delta",
-      html: `
-        <p>Merci pour ton inscription ! Clique sur le bouton ci-dessous pour confirmer ton e-mail :</p>
-        <a href="${confirmLink}" style="background:#7c3aed;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;">Confirmer</a>
-      `
-    });
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Code de vérification - Project : Delta",
+    html: `
+      <p>Merci pour ton inscription !</p>
+      <p>Voici ton code de vérification :</p>
+      <h2 style="font-size: 24px; color: #7c3aed;">${token}</h2>
+      <p>Entre ce code sur le site pour confirmer ton e-mail.</p>
+    `
+  });
 
     res.status(200).json({ message: '📩 Email de confirmation envoyé' });
   } catch (err) {
@@ -160,6 +162,26 @@ app.delete('/unsubscribe', async (req, res) => {
   } catch (err) {
     console.error('❌ Erreur lors de la désinscription :', err);
     res.status(500).json({ error: '❌ Erreur serveur pendant la désinscription' });
+  }
+});
+app.post('/verify-code', async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ error: 'Email ou code manquant' });
+
+  try {
+    const entry = await Email.findOne({ address: email, token: code });
+    if (!entry) return res.status(400).json({ error: 'Code invalide ou expiré' });
+
+    if (entry.verified) return res.status(200).json({ message: 'Déjà confirmé.' });
+
+    entry.verified = true;
+    entry.token = '';
+    await entry.save();
+
+    res.status(200).json({ message: '✅ Vérification réussie !' });
+  } catch (err) {
+    console.error('Erreur vérification code :', err);
+    res.status(500).json({ error: 'Erreur serveur pendant la vérification.' });
   }
 });
 
