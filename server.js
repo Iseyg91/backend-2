@@ -164,24 +164,34 @@ app.delete('/unsubscribe', async (req, res) => {
     res.status(500).json({ error: '❌ Erreur serveur pendant la désinscription' });
   }
 });
+
 app.post('/verify-code', async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) return res.status(400).json({ error: 'Email ou code manquant' });
 
   try {
-    const entry = await Email.findOne({ address: email, token: code });
-    if (!entry) return res.status(400).json({ error: 'Code invalide ou expiré' });
+    const entry = await Email.findOne({ address: email });
 
-    if (entry.verified) return res.status(200).json({ message: 'Déjà confirmé.' });
+    if (!entry) {
+      return res.status(404).json({ error: "Adresse email non trouvée." });
+    }
+
+    if (entry.verified) {
+      return res.status(200).json({ message: "✅ Adresse déjà vérifiée." });
+    }
+
+    if (entry.token !== code) {
+      return res.status(401).json({ error: "❌ Code incorrect." });
+    }
 
     entry.verified = true;
     entry.token = '';
     await entry.save();
 
-    res.status(200).json({ message: '✅ Vérification réussie !' });
+    return res.status(200).json({ message: "✅ Adresse vérifiée avec succès !" });
   } catch (err) {
-    console.error('Erreur vérification code :', err);
-    res.status(500).json({ error: 'Erreur serveur pendant la vérification.' });
+    console.error("Erreur pendant la vérification :", err);
+    res.status(500).json({ error: "❌ Erreur serveur pendant la vérification." });
   }
 });
 
