@@ -82,6 +82,21 @@ transporter.verify((error, success) => {
   }
 });
 
+app.get('/test-mail', async (req, res) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER, // pour tester sur toi-même
+      subject: 'Test de mail',
+      text: 'Ceci est un test de Project : Delta'
+    });
+    res.send('✅ Mail de test envoyé');
+  } catch (err) {
+    console.error('❌ Erreur envoi test :', err);
+    res.status(500).send('❌ Erreur pendant le test');
+  }
+});
+
 // Démarrer le serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
