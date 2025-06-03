@@ -48,6 +48,7 @@ const transporter = nodemailer.createTransport({
 
 app.post('/send-newsletter', async (req, res) => {
   const { subject, content } = req.body;
+  console.log("Adresses ciblées :", allEmails.map(e => e.address));
 
   if (!subject || !content) {
     return res.status(400).json({ error: 'Sujet et contenu requis' });
