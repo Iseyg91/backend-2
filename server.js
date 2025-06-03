@@ -34,7 +34,7 @@ app.post('/subscribe', async (req, res) => {
     await newEmail.save();
 
     // Lien de confirmation
-    const confirmLink = `https://pdd-xrdi.onrender.com/confirm/${token}`;
+    const confirmLink = `https://pdd-xrdi.onrender.com/email-confirmation.html/${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
