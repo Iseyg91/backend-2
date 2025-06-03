@@ -34,7 +34,7 @@ app.post('/subscribe', async (req, res) => {
     await newEmail.save();
 
     // Lien de confirmation
-    const confirmLink = `https://pdd-xrdi.onrender.com/email-confirmation.html/${token}`;
+    const confirmLink = `https://pdd-xrdi.onrender.com/confirm/${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -133,6 +133,7 @@ app.delete('/unsubscribe', async (req, res) => {
   }
   
 });
+
 app.get('/confirm/:token', async (req, res) => {
   const { token } = req.params;
 
@@ -140,15 +141,15 @@ app.get('/confirm/:token', async (req, res) => {
     const emailEntry = await Email.findOne({ token });
     if (!emailEntry) return res.status(400).send('Lien invalide ou expiré.');
 
-    if (emailEntry.confirmed) {
+    if (emailEntry.verified) {
       return res.redirect(`https://pdd-xrdi.onrender.com/deja-confirmé.html`);
     }
 
-    emailEntry.confirmed = true;
-    emailEntry.token = ''; // Invalider le token après usage
+    emailEntry.verified = true; // ✅ pas "confirmed"
+    emailEntry.token = ''; // invalide le token
     await emailEntry.save();
 
-    res.redirect(`https://pdd-xrdi.onrender.com/email-confirmation.html`);
+    return res.redirect(`https://pdd-xrdi.onrender.com/email-confirmation.html`);
   } catch (err) {
     console.error('Erreur de confirmation :', err);
     res.status(500).send('Erreur serveur.');
