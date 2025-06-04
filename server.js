@@ -49,11 +49,11 @@ app.post('/subscribe', async (req, res) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #1e1e2f; color: #ffffff; padding: 20px; border-radius: 10px;">
           <div style="text-align: center;">
-            <img src="https://i.imgur.com/FZyqUxz.png" alt="Project : Delta" style="width: 100px; margin-bottom: 20px;" />
+            <img src="https://github.com/Iseyg91/PD-IC/blob/main/IMAGES%20Delta/Delta%20-%20White%20&%20Black.png?raw=true" alt="Project : Delta" style="width: 100px; margin-bottom: 20px;" />
             <h1 style="color: #4f46e5;">Bienvenue sur Project : Delta !</h1>
           </div>
       
-          <p>Salut 👋,</p>
+          <p>Salut,</p>
           <p>Merci de t'être inscrit à notre newsletter ! Afin de confirmer ton adresse email, entre le code suivant dans l’application :</p>
       
           <div style="text-align: center; margin: 30px 0;">
