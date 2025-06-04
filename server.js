@@ -166,7 +166,7 @@ app.get('/confirm', async (req, res) => {
 
     // ✅ Tu peux aussi rediriger vers une vraie page HTML :
     // res.redirect('https://pdd-xrdi.onrender.com/confirmation.html');
-    res.send('✅ Email confirmé avec succès ! Merci !');
+    res.redirect('https://pdd-xrdi.onrender.com/email-confirmation.html');
   } catch (err) {
     console.error('Erreur de confirmation :', err);
     res.status(500).send('❌ Erreur serveur pendant la confirmation.');
