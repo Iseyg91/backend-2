@@ -47,10 +47,30 @@ app.post('/subscribe', async (req, res) => {
       to: email,
       subject: '🔐 Confirme ton abonnement à Project : Delta',
       html: `
-        <p>Bonjour !</p>
-        <p>Merci de t'être inscrit. Voici ton code de confirmation :</p>
-        <h2>${confirmationCode}</h2>
-        <p>Entre-le dans l'application pour finaliser ton inscription.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #1e1e2f; color: #ffffff; padding: 20px; border-radius: 10px;">
+          <div style="text-align: center;">
+            <img src="https://i.imgur.com/FZyqUxz.png" alt="Project : Delta" style="width: 100px; margin-bottom: 20px;" />
+            <h1 style="color: #4f46e5;">Bienvenue sur Project : Delta !</h1>
+          </div>
+      
+          <p>Salut 👋,</p>
+          <p>Merci de t'être inscrit à notre newsletter ! Afin de confirmer ton adresse email, entre le code suivant dans l’application :</p>
+      
+          <div style="text-align: center; margin: 30px 0;">
+            <span style="display: inline-block; font-size: 28px; font-weight: bold; background-color: #4f46e5; color: white; padding: 10px 20px; border-radius: 8px;">
+              ${confirmationCode}
+            </span>
+          </div>
+      
+          <p>Ce code est valide pour une durée limitée. Si tu n’es pas à l’origine de cette demande, tu peux ignorer ce message.</p>
+      
+          <hr style="margin: 30px 0; border: 0; border-top: 1px solid #444;" />
+      
+          <p style="font-size: 12px; color: #aaa; text-align: center;">
+            Project : Delta • Tous droits réservés<br/>
+            <a href="https://project-delta.fr" style="color: #6d6dff; text-decoration: none;">www.project-delta.fr</a>
+          </p>
+        </div>
       `
     });
 
