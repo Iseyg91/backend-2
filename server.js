@@ -173,6 +173,34 @@ app.post('/verify', async (req, res) => {
     entry.confirmationCode = undefined; // Supprime le code
     await entry.save();
 
+    // Envoyer un e-mail de confirmation après vérification
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: '✅ Ton inscription à Project : Delta est confirmée',
+      html: `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; background-color: #f0fdf4; color: #14532d; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div style="text-align: center;">
+            <h1 style="color: #16a34a; margin-bottom: 10px;">Bienvenue officiellement !</h1>
+          </div>
+    
+          <p>Merci d’avoir confirmé ton adresse e-mail.</p>
+          <p>Tu es maintenant inscrit à la newsletter de <strong>Project : Delta</strong>. Tu recevras régulièrement des infos utiles, des nouveautés et des exclusivités !</p>
+    
+          <div style="margin: 30px 0; text-align: center;">
+            <a href="https://project-delta.fr" style="display: inline-block; padding: 12px 24px; background-color: #16a34a; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold;">Découvrir le site</a>
+          </div>
+    
+          <hr style="margin: 40px 0; border: 0; border-top: 1px solid #ddd;" />
+    
+          <p style="font-size: 12px; color: #555; text-align: center;">
+            Project : Delta • Tous droits réservés<br/>
+            <a href="https://project-delta.fr" style="color: #16a34a; text-decoration: none;">www.project-delta.fr</a>
+          </p>
+        </div>
+      `
+    });
+
     res.status(200).json({ message: '✅ E-mail vérifié avec succès' });
   } catch (err) {
     console.error(err);
