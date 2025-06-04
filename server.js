@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
@@ -15,25 +16,48 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Schéma d'e-mail
 const emailSchema = new mongoose.Schema({
-  address: { type: String, required: true, unique: true }
+  address: { type: String, required: true, unique: true },
+  verified: { type: Boolean, default: false },
+  confirmationCode: { type: String }
 });
 const Email = mongoose.model('Email', emailSchema);
 
-// Route POST pour s'abonner
 app.post('/subscribe', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email manquant' });
 
+  const confirmationCode = crypto.randomBytes(3).toString('hex'); // exemple: 'a1b2c3'
+
   try {
-    const newEmail = new Email({ address: email });
-    await newEmail.save();
-    res.status(200).json({ message: '✅ Abonnement réussi' });
-  } catch (err) {
-    if (err.code === 11000) {
-      res.status(409).json({ error: '⚠️ Cet e-mail est déjà enregistré' });
-    } else {
-      res.status(500).json({ error: '❌ Erreur serveur' });
+    const existing = await Email.findOne({ address: email });
+    if (existing && existing.verified) {
+      return res.status(409).json({ error: '⚠️ Cet e-mail est déjà vérifié' });
     }
+
+    // Créer ou mettre à jour l'entrée avec un code de confirmation
+    const newEmail = await Email.findOneAndUpdate(
+      { address: email },
+      { confirmationCode, verified: false },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    // Envoyer l'e-mail
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: '🔐 Confirme ton abonnement à Project : Delta',
+      html: `
+        <p>Bonjour !</p>
+        <p>Merci de t'être inscrit. Voici ton code de confirmation :</p>
+        <h2>${confirmationCode}</h2>
+        <p>Entre-le dans l'application pour finaliser ton inscription.</p>
+      `
+    });
+
+    res.status(200).json({ message: '📧 Code de confirmation envoyé à votre email' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '❌ Erreur serveur' });
   }
 });
 
@@ -54,7 +78,7 @@ app.post('/send-newsletter', async (req, res) => {
   }
 
   try {
-    const allEmails = await Email.find();
+    const allEmails = await Email.find({ verified: true });
     console.log("Adresses ciblées :", allEmails.map(e => e.address)); // ✅ ICI
 
     const sendPromises = allEmails.map(entry => {
@@ -112,6 +136,28 @@ app.delete('/unsubscribe', async (req, res) => {
   } catch (err) {
     console.error('❌ Erreur lors de la désinscription :', err);
     res.status(500).json({ error: '❌ Erreur serveur pendant la désinscription' });
+  }
+});
+
+app.post('/verify', async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ error: 'Email et code requis' });
+
+  try {
+    const entry = await Email.findOne({ address: email });
+
+    if (!entry) return res.status(404).json({ error: 'E-mail non trouvé' });
+    if (entry.verified) return res.status(400).json({ error: 'Déjà vérifié' });
+    if (entry.confirmationCode !== code) return res.status(401).json({ error: 'Code incorrect' });
+
+    entry.verified = true;
+    entry.confirmationCode = undefined; // Supprime le code
+    await entry.save();
+
+    res.status(200).json({ message: '✅ E-mail vérifié avec succès' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '❌ Erreur lors de la vérification' });
   }
 });
 
