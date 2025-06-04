@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -14,10 +15,19 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ Erreur MongoDB :', err));
 
 // Schéma d'e-mail
+// Emails confirmés
 const emailSchema = new mongoose.Schema({
   address: { type: String, required: true, unique: true }
 });
 const Email = mongoose.model('Email', emailSchema);
+
+// Emails en attente
+const pendingEmailSchema = new mongoose.Schema({
+  address: { type: String, required: true, unique: true },
+  token: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now, expires: 3600 } // expire après 1h
+});
+const PendingEmail = mongoose.model('PendingEmail', pendingEmailSchema);
 
 // Route POST pour s'abonner
 app.post('/subscribe', async (req, res) => {
@@ -25,15 +35,36 @@ app.post('/subscribe', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email manquant' });
 
   try {
-    const newEmail = new Email({ address: email });
-    await newEmail.save();
-    res.status(200).json({ message: '✅ Abonnement réussi' });
+    const existing = await Email.findOne({ address: email });
+    if (existing) return res.status(409).json({ error: '⚠️ Cet e-mail est déjà confirmé' });
+
+    const token = crypto.randomBytes(32).toString('hex');
+
+    await PendingEmail.findOneAndUpdate(
+      { address: email },
+      { address: email, token },
+      { upsert: true }
+    );
+
+    const confirmationLink = `https://votresite.com/confirm?token=${token}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Confirme ton inscription à Project : Delta ✉️',
+      html: `
+        <p>Bonjour,</p>
+        <p>Merci de t'être inscrit. Clique sur le lien ci-dessous pour confirmer ton adresse :</p>
+        <a href="${confirmationLink}">${confirmationLink}</a>
+        <p>Ce lien expire dans 1 heure.</p>
+      `
+    });
+
+    res.status(200).json({ message: '📧 Mail de confirmation envoyé' });
+
   } catch (err) {
-    if (err.code === 11000) {
-      res.status(409).json({ error: '⚠️ Cet e-mail est déjà enregistré' });
-    } else {
-      res.status(500).json({ error: '❌ Erreur serveur' });
-    }
+    console.error('❌ Erreur lors de l’envoi de confirmation :', err);
+    res.status(500).json({ error: '❌ Erreur serveur' });
   }
 });
 
@@ -112,6 +143,26 @@ app.delete('/unsubscribe', async (req, res) => {
   } catch (err) {
     console.error('❌ Erreur lors de la désinscription :', err);
     res.status(500).json({ error: '❌ Erreur serveur pendant la désinscription' });
+  }
+});
+app.get('/confirm', async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).send('❌ Token manquant');
+
+  try {
+    const pending = await PendingEmail.findOne({ token });
+    if (!pending) return res.status(400).send('❌ Token invalide ou expiré');
+
+    const existing = await Email.findOne({ address: pending.address });
+    if (existing) return res.status(409).send('⚠️ Adresse déjà confirmée');
+
+    await new Email({ address: pending.address }).save();
+    await PendingEmail.deleteOne({ token });
+
+    res.send('✅ Adresse e-mail confirmée avec succès !');
+  } catch (err) {
+    console.error('❌ Erreur confirmation :', err);
+    res.status(500).send('❌ Erreur serveur');
   }
 });
 
