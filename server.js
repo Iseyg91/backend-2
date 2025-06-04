@@ -47,28 +47,27 @@ app.post('/subscribe', async (req, res) => {
       to: email,
       subject: '🔐 Confirme ton abonnement à Project : Delta',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; background-color: #1e1e2f; color: #ffffff; padding: 20px; border-radius: 10px;">
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; background-color: #f9f9fc; color: #2c2c2c; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
           <div style="text-align: center;">
-            <img src="https://github.com/Iseyg91/PD-IC/blob/main/IMAGES%20Delta/Delta%20-%20White%20&%20Black.png?raw=true" alt="Project : Delta" style="width: 100px; margin-bottom: 20px;" />
-            <h1 style="color: #4f46e5;">Bienvenue sur Project : Delta !</h1>
+            <h1 style="color: #4f46e5; margin-bottom: 10px;">Bienvenue sur Project : Delta !</h1>
           </div>
       
           <p>Salut,</p>
           <p>Merci de t'être inscrit à notre newsletter ! Afin de confirmer ton adresse email, entre le code suivant dans l’application :</p>
       
           <div style="text-align: center; margin: 30px 0;">
-            <span style="display: inline-block; font-size: 28px; font-weight: bold; background-color: #4f46e5; color: white; padding: 10px 20px; border-radius: 8px;">
+            <span style="display: inline-block; font-size: 30px; font-weight: bold; background-color: #4f46e5; color: #ffffff; padding: 12px 24px; border-radius: 10px; letter-spacing: 2px;">
               ${confirmationCode}
             </span>
           </div>
       
-          <p>Ce code est valide pour une durée limitée. Si tu n’es pas à l’origine de cette demande, tu peux ignorer ce message.</p>
+          <p style="margin-top: 0;">Ce code est valide pour une durée limitée. Si tu n’es pas à l’origine de cette demande, tu peux ignorer ce message.</p>
       
-          <hr style="margin: 30px 0; border: 0; border-top: 1px solid #444;" />
+          <hr style="margin: 40px 0; border: 0; border-top: 1px solid #ddd;" />
       
-          <p style="font-size: 12px; color: #aaa; text-align: center;">
+          <p style="font-size: 12px; color: #666; text-align: center;">
             Project : Delta • Tous droits réservés<br/>
-            <a href="https://project-delta.fr" style="color: #6d6dff; text-decoration: none;">www.project-delta.fr</a>
+            <a href="https://project-delta.fr" style="color: #4f46e5; text-decoration: none;">www.project-delta.fr</a>
           </p>
         </div>
       `
