@@ -4,6 +4,7 @@ const cors = require('cors');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+app.use(express.static('pages'));
 
 const app = express();
 app.use(cors());
