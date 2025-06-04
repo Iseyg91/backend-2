@@ -18,7 +18,8 @@ mongoose.connect(process.env.MONGO_URI)
 const emailSchema = new mongoose.Schema({
   address: { type: String, required: true, unique: true },
   verified: { type: Boolean, default: false },
-  confirmationCode: { type: String }
+  confirmationCode: { type: String },
+  unsubscribeCode: { type: String } // 👈 Nouveau champ
 });
 const Email = mongoose.model('Email', emailSchema);
 
@@ -205,6 +206,77 @@ app.post('/verify', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: '❌ Erreur lors de la vérification' });
+  }
+});
+
+app.post('/request-unsubscribe', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email manquant' });
+
+  const unsubscribeCode = crypto.randomBytes(3).toString('hex');
+
+  try {
+    const user = await Email.findOneAndUpdate(
+      { address: email, verified: true },
+      { unsubscribeCode },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ error: "Adresse non trouvée ou non vérifiée" });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: '❌ Confirmation de désinscription de Project : Delta',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; background-color: #fef2f2; color: #7f1d1d; padding: 30px; border-radius: 12px;">
+          <h1 style="text-align: center; color: #dc2626;">Tu souhaites te désinscrire ?</h1>
+          <p>Voici le code pour confirmer ta désinscription :</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <span style="font-size: 30px; font-weight: bold; background-color: #dc2626; color: #fff; padding: 12px 24px; border-radius: 10px;">${unsubscribeCode}</span>
+          </div>
+          <p>Entre ce code dans le formulaire pour valider ta demande.</p>
+          <p style="font-size: 12px; text-align: center;">Project : Delta - <a href="https://project-delta.fr" style="color: #dc2626;">project-delta.fr</a></p>
+        </div>
+      `
+    });
+
+    res.status(200).json({ message: '📧 Code de désinscription envoyé' });
+  } catch (err) {
+    console.error('❌ Erreur désinscription :', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+app.post('/confirm-unsubscribe', async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ error: 'Email et code requis' });
+
+  try {
+    const entry = await Email.findOne({ address: email });
+
+    if (!entry) return res.status(404).json({ error: 'E-mail non trouvé' });
+    if (entry.unsubscribeCode !== code) return res.status(401).json({ error: 'Code incorrect' });
+
+    await Email.deleteOne({ address: email });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: '📭 Tu as été désinscrit de Project : Delta',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; background-color: #f0fdfa; color: #064e3b; padding: 30px; border-radius: 12px;">
+          <h1 style="text-align: center; color: #059669;">Désinscription confirmée</h1>
+          <p>Ton adresse a bien été supprimée de notre base de données. Tu ne recevras plus nos e-mails.</p>
+          <p style="font-size: 12px; text-align: center;">Project : Delta - <a href="https://project-delta.fr" style="color: #059669;">project-delta.fr</a></p>
+        </div>
+      `
+    });
+
+    res.status(200).json({ message: '✅ Désinscription confirmée et e-mail envoyé' });
+  } catch (err) {
+    console.error('❌ Erreur lors de la confirmation de désinscription :', err);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
