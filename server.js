@@ -35,35 +35,35 @@ app.post('/subscribe', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email manquant' });
 
   try {
-    const existing = await Email.findOne({ address: email });
-    if (existing) return res.status(409).json({ error: '⚠️ Cet e-mail est déjà confirmé' });
+    // Vérifie si déjà confirmé
+    const already = await Email.findOne({ address: email });
+    if (already) return res.status(409).json({ error: '⚠️ Cet e-mail est déjà confirmé' });
 
+    // Supprime anciennes tentatives
+    await PendingEmail.deleteOne({ address: email });
+
+    // Crée un token aléatoire
     const token = crypto.randomBytes(32).toString('hex');
 
-    await PendingEmail.findOneAndUpdate(
-      { address: email },
-      { address: email, token },
-      { upsert: true }
-    );
+    const pending = new PendingEmail({ address: email, token });
+    await pending.save();
 
-    const confirmationLink = `https://votresite.com/confirm?token=${token}`;
+    const confirmLink = `https://pdd-xrdi.onrender.com/confirm?token=${token}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Confirme ton inscription à Project : Delta ✉️',
+      subject: 'Confirme ton abonnement à Project : Delta',
       html: `
-        <p>Bonjour,</p>
-        <p>Merci de t'être inscrit. Clique sur le lien ci-dessous pour confirmer ton adresse :</p>
-        <a href="${confirmationLink}">${confirmationLink}</a>
+        <p>Merci pour ton inscription ! Clique sur le lien ci-dessous pour confirmer ton email :</p>
+        <a href="${confirmLink}">Confirmer mon abonnement</a>
         <p>Ce lien expire dans 1 heure.</p>
       `
     });
 
-    res.status(200).json({ message: '📧 Mail de confirmation envoyé' });
-
+    res.status(200).json({ message: '📨 Mail de confirmation envoyé' });
   } catch (err) {
-    console.error('❌ Erreur lors de l’envoi de confirmation :', err);
+    console.error('Erreur lors de la souscription :', err);
     res.status(500).json({ error: '❌ Erreur serveur' });
   }
 });
@@ -145,24 +145,31 @@ app.delete('/unsubscribe', async (req, res) => {
     res.status(500).json({ error: '❌ Erreur serveur pendant la désinscription' });
   }
 });
+
 app.get('/confirm', async (req, res) => {
   const { token } = req.query;
-  if (!token) return res.status(400).send('❌ Token manquant');
+  if (!token) return res.status(400).send('❌ Token manquant.');
 
   try {
     const pending = await PendingEmail.findOne({ token });
-    if (!pending) return res.status(400).send('❌ Token invalide ou expiré');
+    if (!pending) return res.status(400).send('❌ Token invalide ou expiré.');
 
-    const existing = await Email.findOne({ address: pending.address });
-    if (existing) return res.status(409).send('⚠️ Adresse déjà confirmée');
+    const already = await Email.findOne({ address: pending.address });
+    if (already) {
+      await PendingEmail.deleteOne({ _id: pending._id });
+      return res.send('✅ Adresse déjà confirmée.');
+    }
 
-    await new Email({ address: pending.address }).save();
-    await PendingEmail.deleteOne({ token });
+    const confirmed = new Email({ address: pending.address });
+    await confirmed.save();
+    await PendingEmail.deleteOne({ _id: pending._id });
 
-    res.send('✅ Adresse e-mail confirmée avec succès !');
+    // ✅ Tu peux aussi rediriger vers une vraie page HTML :
+    // res.redirect('https://pdd-xrdi.onrender.com/confirmation.html');
+    res.send('✅ Email confirmé avec succès ! Merci !');
   } catch (err) {
-    console.error('❌ Erreur confirmation :', err);
-    res.status(500).send('❌ Erreur serveur');
+    console.error('Erreur de confirmation :', err);
+    res.status(500).send('❌ Erreur serveur pendant la confirmation.');
   }
 });
 
