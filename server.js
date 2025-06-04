@@ -46,7 +46,7 @@ app.post('/subscribe', async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '🔐 Confirme ton abonnement à Project : Delta',
+      subject: 'Confirme ton abonnement à Project : Delta',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; background-color: #f9f9fc; color: #2c2c2c; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
           <div style="text-align: center;">
@@ -178,7 +178,7 @@ app.post('/verify', async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '✅ Ton inscription à Project : Delta est confirmée',
+      subject: 'Ton inscription à Project : Delta est confirmée',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; background-color: #f0fdf4; color: #14532d; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
           <div style="text-align: center;">
@@ -227,7 +227,7 @@ app.post('/request-unsubscribe', async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '❌ Confirmation de désinscription de Project : Delta',
+      subject: 'Confirmation de désinscription de Project : Delta',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; background-color: #fef2f2; color: #7f1d1d; padding: 30px; border-radius: 12px;">
           <h1 style="text-align: center; color: #dc2626;">Tu souhaites te désinscrire ?</h1>
@@ -263,7 +263,7 @@ app.post('/confirm-unsubscribe', async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: '📭 Tu as été désinscrit de Project : Delta',
+      subject: 'Tu as été désinscrit de Project : Delta',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; background-color: #f0fdfa; color: #064e3b; padding: 30px; border-radius: 12px;">
           <h1 style="text-align: center; color: #059669;">Désinscription confirmée</h1>
