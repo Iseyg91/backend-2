@@ -4,9 +4,9 @@ const cors = require('cors');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-app.use(express.static('pages'));
 
-const app = express();
+const app = express(); // ⚠️ Doit être avant tout appel à app.use
+app.use(express.static('pages')); // déplacé ici
 app.use(cors());
 app.use(express.json());
 
